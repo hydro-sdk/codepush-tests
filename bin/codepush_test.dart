@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uuid/uuid.dart';
+import 'package:path/path.dart' as path;
 
 import 'package:hydro_sdk/build-project/projectBuilder.dart';
 import 'package:hydro_sdk/build-project/sha256Data.dart';
@@ -148,8 +149,9 @@ void main() {
       final ProjectBuilder projectBuilder = ProjectBuilder(
         projectConfig: projectConfig,
         ts2hc:
-            ".hydroc/${package["dependencies"]["@hydro-sdk/hydro-sdk"]}/sdk-tools/ts2hc-$platformName-x64",
-        cacheDir: ".hydroc/${package["dependencies"]["@hydro-sdk/hydro-sdk"]}",
+            ".hydroc${path.separator}${package["dependencies"]["@hydro-sdk/hydro-sdk"]}${path.separator}sdk-tools${path.separator}ts2hc-$platformName-x64",
+        cacheDir:
+            ".hydroc${path.separator}${package["dependencies"]["@hydro-sdk/hydro-sdk"]}",
         profile: "release",
         signingKey: createComponentResponse.publishingPrivateKey,
         outDir: ".",
