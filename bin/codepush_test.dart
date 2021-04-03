@@ -137,10 +137,18 @@ void main() {
       final Map<String, dynamic> package =
           jsonDecode(await File("package.json").readAsString());
 
+      final platformName = Platform.isMacOS
+          ? "darwin"
+          : Platform.isWindows
+              ? "win32"
+              : Platform.isLinux
+                  ? "linux"
+                  : "";
+
       final ProjectBuilder projectBuilder = ProjectBuilder(
         projectConfig: projectConfig,
         ts2hc:
-            ".hydroc/${package["dependencies"]["@hydro-sdk/hydro-sdk"]}/sdk-tools/ts2hc-darwin-x64",
+            ".hydroc/${package["dependencies"]["@hydro-sdk/hydro-sdk"]}/sdk-tools/ts2hc-$platformName-x64",
         cacheDir: ".hydroc/${package["dependencies"]["@hydro-sdk/hydro-sdk"]}",
         profile: "release",
         signingKey: createComponentResponse.publishingPrivateKey,
