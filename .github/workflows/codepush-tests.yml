@@ -64,4 +64,5 @@ jobs:
 
     - name: Test 
       run: export REGISTRY_TEST_URL=${{ secrets.REGISTRY_TEST_URL }}; flutter test bin/codepush_test.dart
+      shell: bash
       working-directory: codepush_tests
