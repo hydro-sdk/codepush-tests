@@ -129,15 +129,19 @@ void main() {
         ProjectConfigComponent(name: componentName, chunks: [
           ProjectConfigComponentChunk(
             type: ProjectConfigComponentChunkType.mountable,
-            entryPoint: "examples/counter/index.ts",
+            entryPoint: "ota/index.ts",
           )
         ])
       ]);
 
+      final Map<String, dynamic> package =
+          jsonDecode(await File("package.json").readAsString());
+
       final ProjectBuilder projectBuilder = ProjectBuilder(
         projectConfig: projectConfig,
-        ts2hc: ".hydroc/0.0.1/sdk-tools/ts2hc-darwin-x64",
-        cacheDir: ".hydroc/0.0.1",
+        ts2hc:
+            ".hydroc/${package["dependencies"]["@hydro-sdk/hydro-sdk"]}/sdk-tools/ts2hc-darwin-x64",
+        cacheDir: ".hydroc/${package["dependencies"]["@hydro-sdk/hydro-sdk"]}",
         profile: "release",
         signingKey: createComponentResponse.publishingPrivateKey,
         outDir: ".",
@@ -150,7 +154,7 @@ void main() {
         publishingPrivateKeySha256:
             sha256Data(createComponentResponse.publishingPrivateKey.codeUnits),
         otaPackageBase64:
-            base64Encode(await File("${componentName}.ota").readAsBytes()),
+            base64Encode(await File("$componentName.ota").readAsBytes()),
         componentName: componentName,
         displayVersion: "",
         description: "",
