@@ -1,0 +1,40 @@
+{
+  "name": "codepush-tests",
+  "version": "1.0.0",
+  "description": "🚀",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "flutter test",
+    "format": "flutter format lib test && npx prettier --write ota"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hydro-sdk/codepush-tests.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hydro-sdk/codepush-tests/issues"
+  },
+  "homepage": "https://github.com/hydro-sdk/codepush-tests#readme",
+  "dependencies": {
+    "@hydro-sdk/waveform": "0.0.1-nightly.34",
+    "@hydro-sdk/hydro-sdk": "0.0.1-nightly.192",
+    "prettier": "^2.2.0",
+    "prettier-plugin-import-sort": "0.0.6",
+    "import-sort-style-module": "^6.0.0"
+  },
+  "importSort": {
+    ".js, .jsx, .ts, .tsx": {
+      "style": "module",
+      "parser": "typescript"
+    }
+  },
+  "prettier": {
+    "tabWidth": 4
+  }
+}
