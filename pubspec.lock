@@ -323,8 +323,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "0.0.1-nightly.193"
-      resolved-ref: "2266c6afd358cf2c6645f5d339dee51921fa6f5a"
+      ref: "0.0.1-nightly.196"
+      resolved-ref: "7d66d58ac22aa4ae1841a3d9b93dccca2e0b3a41"
       url: "git://github.com/hydro-sdk/hydro-sdk.git"
     source: git
     version: "1.0.0+1"
@@ -637,8 +637,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "0.0.1-nightly.34"
-      resolved-ref: "0448bf6959851a8d1a4f65c46fd9172fd53d8476"
+      ref: "0.0.1-nightly.35"
+      resolved-ref: bd75d3a1fdd0857ea60b60bc70f65f60b2a36069
       url: "git://github.com/hydro-sdk/waveform.git"
     source: git
     version: "0.0.1"
