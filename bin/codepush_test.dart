@@ -2,10 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:archive/archive_io.dart';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hydro_sdk/registry/dto/getPackageDto.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path;
+import 'package:http/http.dart';
 
 import 'package:hydro_sdk/build-project/projectBuilder.dart';
 import 'package:hydro_sdk/build-project/sha256Data.dart';
@@ -174,6 +177,36 @@ void main() {
       ));
 
       expect(createPackageResponse, isNotNull);
+
+      var latestPackageUri = await api.getLatestPackageUri(
+          getPackageDto: GetPackageDto(
+        sessionId: Uuid().v4(),
+        projectName: projectName,
+        componentName: componentName,
+        releaseChannelName: "latest",
+        currentPackageId: "",
+      ));
+
+      expect(latestPackageUri.statusCode, 201);
+      expect(latestPackageUri.body, isNotNull);
+      expect(latestPackageUri.body, isNotEmpty);
+
+      final downloadResponse = await get(latestPackageUri.body);
+      expect(downloadResponse.statusCode, 200);
+      expect(downloadResponse.body, isNotEmpty);
+
+      final rawPackage = base64Decode(downloadResponse.body);
+
+      expect(downloadResponse.body,
+          base64Encode(await File("$componentName.ota").readAsBytes()));
+
+      final decodedBzip2 = BZip2Decoder().decodeBytes(rawPackage);
+
+      expect(decodedBzip2, isNotNull);
+
+      final decodedTar = TarDecoder().decodeBytes(decodedBzip2);
+
+      expect(decodedTar, isNotNull);
     }, tags: "registry", timeout: const Timeout(Duration(minutes: 5)));
   });
 }
