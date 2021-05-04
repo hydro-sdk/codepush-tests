@@ -260,7 +260,7 @@ quod unam Ulixem.
     var exception = tester.takeException();
     expect(exception, isNull);
 
-    await Future.delayed(Duration(seconds: 5));
+    await Future.delayed(Duration(seconds: 60));
 
     expect(find.byKey(const Key("counter")), findsOneWidget);
     expect(find.byKey(const Key("increment")), findsOneWidget);
