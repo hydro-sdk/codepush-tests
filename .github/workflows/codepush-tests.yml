@@ -63,6 +63,8 @@ jobs:
       working-directory: codepush_tests
 
     - name: Test 
-      run: export REGISTRY_TEST_URL=${{ secrets.REGISTRY_TEST_URL }}; flutter test test/codepush_test.dart
+      run:  |
+        export REGISTRY_TEST_URL=${{ secrets.REGISTRY_TEST_URL }}; flutter test test/codepush_test.dart
+        export REGISTRY_TEST_URL=${{ secrets.REGISTRY_TEST_URL }}; flutter test test/codepushAndRun_test.dart
       shell: bash
       working-directory: codepush_tests
