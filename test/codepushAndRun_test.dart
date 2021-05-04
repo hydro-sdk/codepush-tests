@@ -260,6 +260,8 @@ quod unam Ulixem.
     var exception = tester.takeException();
     expect(exception, isNull);
 
+    await Future.delayed(Duration(seconds: 5));
+
     expect(find.byKey(const Key("counter")), findsOneWidget);
     expect(find.byKey(const Key("increment")), findsOneWidget);
     expect(find.text("You have pushed the button this many times"),
