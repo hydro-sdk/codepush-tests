@@ -262,6 +262,11 @@ quod unam Ulixem.
 
     await Future.delayed(Duration(seconds: 60));
 
+    await tester.pumpAndSettle();
+
+    exception = tester.takeException();
+    expect(exception, isNull);
+
     expect(find.byKey(const Key("counter")), findsOneWidget);
     expect(find.byKey(const Key("increment")), findsOneWidget);
     expect(find.text("You have pushed the button this many times"),
