@@ -35,10 +35,12 @@ void main() {
       final password = Uuid().v4();
 
       final projectName = "codepush-test-project-${Uuid().v4()}";
-      final projectDescription = "codepush test project descrption ${Uuid().v4()}";
+      final projectDescription =
+          "codepush test project descrption ${Uuid().v4()}";
 
       final componentName = "codepush-test-component-${Uuid().v4()}";
-      final componentDescription = "codepush test component descrption ${Uuid().v4()}";
+      final componentDescription =
+          "codepush test component descrption ${Uuid().v4()}";
 
       final response = await api.createUser(
           dto: CreateUserDto(
@@ -129,14 +131,21 @@ void main() {
       expect(canUpdateComponentResponse.first.description,
           createComponentResponse.description);
 
-      final projectConfig = ProjectConfig(project: projectName, components: [
-        ProjectConfigComponent(name: componentName, chunks: [
-          ProjectConfigComponentChunk(
-            type: ProjectConfigComponentChunkType.mountable,
-            entryPoint: "ota/index.ts",
-          )
-        ])
-      ]);
+      final projectConfig = ProjectConfig(
+        project: projectName,
+        components: [
+          ProjectConfigComponent(
+            name: componentName,
+            chunks: [
+              ProjectConfigComponentChunk(
+                type: ProjectConfigComponentChunkType.mountable,
+                entryPoint: "ota/index.ts",
+                baseUrl: "ota",
+              ),
+            ],
+          ),
+        ],
+      );
 
       final Map<String, dynamic> package =
           jsonDecode(await File("package.json").readAsString());
