@@ -28,7 +28,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         repository: 'flutter/flutter'
-        ref: '1.22.0'
+        ref: '2.0.5'
         path: 'flutter'
         fetch-depth: 0
     - name: Add Flutter to the PATH for Unix
@@ -63,6 +63,8 @@ jobs:
       working-directory: codepush_tests
 
     - name: Test 
-      run: export REGISTRY_TEST_URL=${{ secrets.REGISTRY_TEST_URL }}; flutter test bin/codepush_test.dart
+      run:  |
+        export REGISTRY_TEST_URL=${{ secrets.REGISTRY_TEST_URL }}; flutter test test/codepush_test.dart
+        export REGISTRY_TEST_URL=${{ secrets.REGISTRY_TEST_URL }}; flutter test test/codepushAndRun_test.dart
       shell: bash
       working-directory: codepush_tests
