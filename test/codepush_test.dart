@@ -262,7 +262,7 @@ quod unam Ulixem.
       expect(latestPackageUri.body, isNotNull);
       expect(latestPackageUri.body, isNotEmpty);
 
-      final downloadResponse = await get(latestPackageUri.body);
+      final downloadResponse = await get(Uri.parse(latestPackageUri.body));
       expect(downloadResponse.statusCode, 200);
       expect(downloadResponse.body, isNotEmpty);
 
