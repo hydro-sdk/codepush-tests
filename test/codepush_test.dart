@@ -93,7 +93,6 @@ void main() {
       );
 
       expect(canUpdateProjectResponse, isNotNull);
-      expect(canUpdateProjectResponse.first.name, createProjectResponse.name);
       expect(canUpdateProjectResponse.first.description,
           createProjectResponse.description);
 
