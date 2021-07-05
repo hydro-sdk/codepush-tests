@@ -93,8 +93,6 @@ void main() {
       );
 
       expect(canUpdateProjectResponse, isNotNull);
-      expect(canUpdateProjectResponse.first.description,
-          createProjectResponse.description);
 
       var createComponentResponse = await api.createComponent(
         dto: CreateComponentDto(
