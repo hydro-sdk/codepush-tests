@@ -250,7 +250,7 @@ quod unam Ulixem.
       pubspecLock: "",
     ));
 
-    expect(createPackageResponse, 201);
+    expect(createPackageResponse.statusCode, 201);
 
     await tester.pumpWidget(RunComponent(
       project: projectName,
