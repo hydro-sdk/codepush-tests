@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hydro_sdk/registry/dto/createMockUserDto.dart';
 import 'package:hydro_sdk/runComponent/runComponent.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path;
@@ -16,12 +17,13 @@ import 'package:hydro_sdk/projectConfig/projectConfigComponentChunk.dart';
 import 'package:hydro_sdk/registry/dto/createComponentDto.dart';
 import 'package:hydro_sdk/registry/dto/createPackageDto.dart';
 import 'package:hydro_sdk/registry/dto/createProjectDto.dart';
-import 'package:hydro_sdk/registry/dto/createUserDto.dart';
-import 'package:hydro_sdk/registry/dto/loginUserDto.dart';
 import 'package:hydro_sdk/registry/dto/sessionDto.dart';
 import 'package:hydro_sdk/registry/registryApi.dart';
 
-final registryTestUrl = Platform.environment["REGISTRY_TEST_URL"];
+final registryTestHost = Platform.environment["REGISTRY_TEST_HOST"];
+final registryTestPort =
+    int.tryParse(Platform.environment["REGISTRY_TEST_PORT"] ?? "");
+final registryTestScheme = Platform.environment["REGISTRY_TEST_SCHEME"];
 
 class CustomBindings extends LiveTestWidgetsFlutterBinding {
   @override
@@ -31,7 +33,11 @@ class CustomBindings extends LiveTestWidgetsFlutterBinding {
 void main() {
   CustomBindings();
   testWidgets("", (WidgetTester tester) async {
-    final api = RegistryApi(baseUrl: registryTestUrl);
+    final api = RegistryApi(
+      scheme: registryTestScheme,
+      host: registryTestHost,
+      port: registryTestPort,
+    );
 
     final username = "test${Uuid().v4()}";
     final password = Uuid().v4();
@@ -44,10 +50,11 @@ void main() {
     final componentDescription =
         "codepush test component descrption ${Uuid().v4()}";
 
-    final response = await api.createUser(
-        dto: CreateUserDto(
-      username: username,
-      password: password,
+    final response = await api.createMockUser(
+        dto: CreateMockUserDto(
+      displayName: username,
+      email: "${api.hash(Uuid().v4())}@example.com",
+      password: Uuid().v4(),
     ));
 
     expect(response, isNotNull);
@@ -63,21 +70,14 @@ void main() {
 
     expect(createProjectResponse, isNull);
 
-    final loginResponse = await api.login(
-        dto: LoginUserDto(
-      username: username,
-      password: password,
-    ));
-
-    expect(loginResponse, isNotNull);
-    expect(loginResponse.authenticatedUser.username, username);
-
     createProjectResponse = await api.createProject(
       dto: CreateProjectDto(
         name: projectName,
         description: projectDescription,
       ),
-      sessionDto: loginResponse,
+      sessionDto: SessionDto(
+        authToken: response,
+      ),
     );
 
     expect(createProjectResponse, isNotNull);
@@ -91,7 +91,9 @@ void main() {
     expect(canUpdateProjectResponse, isNull);
 
     canUpdateProjectResponse = await api.canUpdateProjects(
-      sessionDto: loginResponse,
+      sessionDto: SessionDto(
+        authToken: response,
+      ),
     );
 
     expect(canUpdateProjectResponse, isNotNull);
@@ -116,7 +118,9 @@ void main() {
         description: componentDescription,
         projectId: createProjectResponse.id,
       ),
-      sessionDto: loginResponse,
+      sessionDto: SessionDto(
+        authToken: response,
+      ),
     );
 
     expect(createComponentResponse, isNotNull);
@@ -124,7 +128,9 @@ void main() {
     expect(createComponentResponse.description, componentDescription);
 
     var canUpdateComponentResponse = await api.canUpdateComponents(
-      sessionDto: loginResponse,
+      sessionDto: SessionDto(
+        authToken: response,
+      ),
     );
 
     expect(canUpdateComponentResponse, isNotNull);
@@ -248,11 +254,13 @@ quod unam Ulixem.
       pubspecLock: "",
     ));
 
+    expect(createPackageResponse, 201);
+
     await tester.pumpWidget(RunComponent(
       project: projectName,
       component: componentName,
       releaseChannel: "latest",
-      registryApi: RegistryApi(baseUrl: registryTestUrl),
+      registryApi: api,
     ));
 
     await tester.pumpAndSettle();
