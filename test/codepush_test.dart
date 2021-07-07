@@ -55,7 +55,7 @@ void main() {
       ));
 
       expect(response, isNotNull);
-      expect(response, true);
+      expect(response, isNotEmpty);
 
       var createProjectResponse = await api.createProject(
         dto: CreateProjectDto(

@@ -40,7 +40,6 @@ void main() {
     );
 
     final username = "test${Uuid().v4()}";
-    final password = Uuid().v4();
 
     final projectName = "codepush-test-project-${Uuid().v4()}";
     final projectDescription =
@@ -58,7 +57,7 @@ void main() {
     ));
 
     expect(response, isNotNull);
-    expect(response, true);
+    expect(response, isNotEmpty);
 
     var createProjectResponse = await api.createProject(
       dto: CreateProjectDto(
