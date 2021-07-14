@@ -4,10 +4,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hydro_sdk/otaCacheMgr/directoryProvider.dart';
+import 'package:hydro_sdk/otaCacheMgr/otaCacheMgr.dart';
 import 'package:hydro_sdk/registry/dto/createMockUserDto.dart';
 import 'package:hydro_sdk/runComponent/runComponent.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path;
+import 'package:collection/collection.dart' show IterableExtension;
 
 import 'package:hydro_sdk/build-project/projectBuilder.dart';
 import 'package:hydro_sdk/build-project/sha256Data.dart';
@@ -30,6 +33,13 @@ class CustomBindings extends LiveTestWidgetsFlutterBinding {
   bool get overrideHttpClient => false;
 }
 
+class TestDirectoryProvider extends DirectoryProvider {
+  const TestDirectoryProvider();
+
+  @override
+  Future<String> applicationDocumentsDirectory() async => "test/ota";
+}
+
 void main() {
   CustomBindings();
   testWidgets("", (WidgetTester tester) async {
@@ -49,17 +59,22 @@ void main() {
     final componentDescription =
         "codepush test component descrption ${Uuid().v4()}";
 
-    final response = await api.createMockUser(
+    final createMockUserResult = await api.createMockUser(
         dto: CreateMockUserDto(
       displayName: username,
       email: "${api.hash(Uuid().v4())}@example.com",
       password: Uuid().v4(),
     ));
 
-    expect(response, isNotNull);
-    expect(response, isNotEmpty);
+    final mockUserToken = createMockUserResult.maybeWhen(
+      success: (val) => val.result,
+      orElse: () => null,
+    );
 
-    var createProjectResponse = await api.createProject(
+    expect(mockUserToken, isNotNull);
+    expect(mockUserToken, isNotEmpty);
+
+    var createProjectResult = await api.createProject(
       dto: CreateProjectDto(
         name: projectName,
         description: projectDescription,
@@ -67,72 +82,117 @@ void main() {
       sessionDto: SessionDto.empty(),
     );
 
-    expect(createProjectResponse, isNull);
+    expect(
+        createProjectResult.maybeWhen(
+          failure: (_) => true,
+          orElse: () => null,
+        ),
+        true);
 
-    createProjectResponse = await api.createProject(
+    createProjectResult = await api.createProject(
       dto: CreateProjectDto(
         name: projectName,
         description: projectDescription,
       ),
       sessionDto: SessionDto(
-        authToken: response,
+        authToken: mockUserToken,
       ),
     );
 
-    expect(createProjectResponse, isNotNull);
-    expect(createProjectResponse.name, projectName);
-    expect(createProjectResponse.description, projectDescription);
+    final createProjectSuccessResult = createProjectResult.maybeWhen(
+      success: (val) => val,
+      orElse: () => null,
+    );
 
-    var canUpdateProjectResponse = await api.canUpdateProjects(
+    expect(createProjectSuccessResult, isNotNull);
+    expect(createProjectSuccessResult.result.name, projectName);
+    expect(createProjectSuccessResult.result.description, projectDescription);
+
+    var canUpdateProjectResult = await api.canUpdateProjects(
       sessionDto: SessionDto.empty(),
     );
 
-    expect(canUpdateProjectResponse, isNull);
+    expect(
+        canUpdateProjectResult.maybeWhen(
+          failure: (_) => true,
+          orElse: () => null,
+        ),
+        true);
 
-    canUpdateProjectResponse = await api.canUpdateProjects(
+    canUpdateProjectResult = await api.canUpdateProjects(
       sessionDto: SessionDto(
-        authToken: response,
+        authToken: mockUserToken,
       ),
     );
 
-    expect(canUpdateProjectResponse, isNotNull);
+    final canUpdateProjectSuccessResult = canUpdateProjectResult.maybeWhen(
+      success: (val) => val,
+      orElse: () => null,
+    );
 
-    var createComponentResponse = await api.createComponent(
+    expect(canUpdateProjectSuccessResult, isNotNull);
+
+    var createdProject = canUpdateProjectSuccessResult.result.firstWhereOrNull(
+        (x) => x.name == createProjectSuccessResult.result.name);
+
+    expect(createdProject, isNotNull);
+    expect(createdProject.description,
+        createProjectSuccessResult.result.description);
+
+    var createComponentResult = await api.createComponent(
       dto: CreateComponentDto(
         name: componentName,
         description: componentDescription,
-        projectId: createProjectResponse.id,
+        projectId: createProjectSuccessResult.result.id,
       ),
       sessionDto: SessionDto.empty(),
     );
 
-    expect(createComponentResponse, isNull);
+    expect(
+        createComponentResult.maybeWhen(
+          failure: (_) => true,
+          orElse: () => null,
+        ),
+        true);
 
-    createComponentResponse = await api.createComponent(
+    createComponentResult = await api.createComponent(
       dto: CreateComponentDto(
         name: componentName,
         description: componentDescription,
-        projectId: createProjectResponse.id,
+        projectId: createProjectSuccessResult.result.id,
       ),
       sessionDto: SessionDto(
-        authToken: response,
+        authToken: mockUserToken,
       ),
     );
 
-    expect(createComponentResponse, isNotNull);
-    expect(createComponentResponse.name, componentName);
-    expect(createComponentResponse.description, componentDescription);
+    final createComponentSuccessResult = createComponentResult.maybeWhen(
+      success: (val) => val,
+      orElse: () => null,
+    );
 
-    var canUpdateComponentResponse = await api.canUpdateComponents(
+    expect(createComponentSuccessResult, isNotNull);
+    expect(createComponentSuccessResult.result.name, componentName);
+    expect(
+        createComponentSuccessResult.result.description, componentDescription);
+
+    var canUpdateComponentResult = await api.canUpdateComponents(
       sessionDto: SessionDto(
-        authToken: response,
+        authToken: mockUserToken,
       ),
     );
 
-    expect(canUpdateComponentResponse, isNotNull);
-    expect(canUpdateComponentResponse.first.name, createComponentResponse.name);
-    expect(canUpdateComponentResponse.first.description,
-        createComponentResponse.description);
+    final canUpdateComponentSuccessResult = canUpdateComponentResult.maybeWhen(
+      success: (val) => val,
+      orElse: () => null,
+    );
+
+    expect(canUpdateComponentSuccessResult, isNotNull);
+
+    expect(canUpdateComponentSuccessResult.result.first.name,
+        createComponentSuccessResult.result.name);
+    expect(canUpdateComponentSuccessResult.result.first.description,
+        createComponentSuccessResult.result.description);
 
     final projectConfig = ProjectConfig(
       project: projectName,
@@ -168,16 +228,16 @@ void main() {
       cacheDir:
           ".hydroc${path.separator}${package["dependencies"]["@hydro-sdk/hydro-sdk"]}",
       profile: "release",
-      signingKey: createComponentResponse.publishingPrivateKey,
+      signingKey: createComponentSuccessResult.result.publishingPrivateKey,
       outDir: ".",
     );
 
     await projectBuilder.build(signManifest: true);
 
-    final createPackageResponse = await api.createPackage(
+    final createPackageResult = await api.createPackage(
         createPackageDto: CreatePackageDto(
-      publishingPrivateKeySha256:
-          sha256Data(createComponentResponse.publishingPrivateKey.codeUnits),
+      publishingPrivateKeySha256: sha256Data(
+          createComponentSuccessResult.result.publishingPrivateKey.codeUnits),
       otaPackageBase64:
           base64Encode(await File("$componentName.ota").readAsBytes()),
       componentName: componentName,
@@ -250,13 +310,21 @@ quod unam Ulixem.
       pubspecLock: "",
     ));
 
-    expect(createPackageResponse.statusCode, 201);
+    final createPackageSuccessResult = createPackageResult.maybeWhen(
+      success: (val) => val,
+      orElse: () => null,
+    );
+
+    expect(createPackageSuccessResult, isNotNull);
 
     await tester.pumpWidget(RunComponent(
       project: projectName,
       component: componentName,
       releaseChannel: "latest",
       registryApi: api,
+      otaCacheMgr: const OtaCacheMgr(
+        directoryProvider: TestDirectoryProvider(),
+      ),
     ));
 
     await tester.pumpAndSettle();
