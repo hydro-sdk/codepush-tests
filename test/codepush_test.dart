@@ -3,10 +3,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:archive/archive_io.dart';
+import 'package:collection/collection.dart' show IterableExtension;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hydro_sdk/registry/dto/createMockUserDto.dart';
-import 'package:hydro_sdk/registry/dto/getPackageDto.dart';
+import 'package:hydro_sdk/registry/dto/getLatestPackageDto.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path;
 import 'package:http/http.dart';
@@ -47,17 +48,22 @@ void main() {
       final componentDescription =
           "codepush test component descrption ${Uuid().v4()}";
 
-      final response = await api.createMockUser(
+      final createMockUserResult = await api.createMockUser(
           dto: CreateMockUserDto(
         displayName: username,
         email: "${api.hash(Uuid().v4())}@example.com",
         password: Uuid().v4(),
       ));
 
-      expect(response, isNotNull);
-      expect(response, isNotEmpty);
+      final mockUserToken = createMockUserResult.maybeWhen(
+        success: (val) => val.result,
+        orElse: () => null,
+      );
 
-      var createProjectResponse = await api.createProject(
+      expect(mockUserToken, isNotNull);
+      expect(mockUserToken, isNotEmpty);
+
+      var createProjectResult = await api.createProject(
         dto: CreateProjectDto(
           name: projectName,
           description: projectDescription,
@@ -65,73 +71,119 @@ void main() {
         sessionDto: SessionDto.empty(),
       );
 
-      expect(createProjectResponse, isNull);
-
-      createProjectResponse = await api.createProject(
-        dto: CreateProjectDto(
-          name: projectName,
-          description: projectDescription,
-        ),
-        sessionDto: SessionDto(
-          authToken: response,
-        ),
-      );
-
-      expect(createProjectResponse, isNotNull);
-      expect(createProjectResponse.name, projectName);
-      expect(createProjectResponse.description, projectDescription);
-
-      var canUpdateProjectResponse = await api.canUpdateProjects(
-        sessionDto: SessionDto.empty(),
-      );
-
-      expect(canUpdateProjectResponse, isNull);
-
-      canUpdateProjectResponse = await api.canUpdateProjects(
-        sessionDto: SessionDto(
-          authToken: response,
-        ),
-      );
-
-      expect(canUpdateProjectResponse, isNotNull);
-
-      var createComponentResponse = await api.createComponent(
-        dto: CreateComponentDto(
-          name: componentName,
-          description: componentDescription,
-          projectId: createProjectResponse.id,
-        ),
-        sessionDto: SessionDto.empty(),
-      );
-
-      expect(createComponentResponse, isNull);
-
-      createComponentResponse = await api.createComponent(
-        dto: CreateComponentDto(
-          name: componentName,
-          description: componentDescription,
-          projectId: createProjectResponse.id,
-        ),
-        sessionDto: SessionDto(
-          authToken: response,
-        ),
-      );
-
-      expect(createComponentResponse, isNotNull);
-      expect(createComponentResponse.name, componentName);
-      expect(createComponentResponse.description, componentDescription);
-
-      var canUpdateComponentResponse = await api.canUpdateComponents(
-        sessionDto: SessionDto(
-          authToken: response,
-        ),
-      );
-
-      expect(canUpdateComponentResponse, isNotNull);
       expect(
-          canUpdateComponentResponse.first.name, createComponentResponse.name);
-      expect(canUpdateComponentResponse.first.description,
-          createComponentResponse.description);
+          createProjectResult.maybeWhen(
+            failure: (_) => true,
+            orElse: () => null,
+          ),
+          true);
+
+      createProjectResult = await api.createProject(
+        dto: CreateProjectDto(
+          name: projectName,
+          description: projectDescription,
+        ),
+        sessionDto: SessionDto(
+          authToken: mockUserToken,
+        ),
+      );
+
+      final createProjectSuccessResult = createProjectResult.maybeWhen(
+        success: (val) => val,
+        orElse: () => null,
+      );
+
+      expect(createProjectSuccessResult, isNotNull);
+      expect(createProjectSuccessResult.result.name, projectName);
+      expect(createProjectSuccessResult.result.description, projectDescription);
+
+      var canUpdateProjectResult = await api.canUpdateProjects(
+        sessionDto: SessionDto.empty(),
+      );
+
+      expect(
+          canUpdateProjectResult.maybeWhen(
+            failure: (_) => true,
+            orElse: () => null,
+          ),
+          true);
+
+      canUpdateProjectResult = await api.canUpdateProjects(
+        sessionDto: SessionDto(
+          authToken: mockUserToken,
+        ),
+      );
+
+      final canUpdateProjectSuccessResult = canUpdateProjectResult.maybeWhen(
+        success: (val) => val,
+        orElse: () => null,
+      );
+
+      expect(canUpdateProjectSuccessResult, isNotNull);
+
+      var createdProject = canUpdateProjectSuccessResult.result
+          .firstWhereOrNull(
+              (x) => x.name == createProjectSuccessResult.result.name);
+
+      expect(createdProject, isNotNull);
+      expect(createdProject.description,
+          createProjectSuccessResult.result.description);
+
+      var createComponentResult = await api.createComponent(
+        dto: CreateComponentDto(
+          name: componentName,
+          description: componentDescription,
+          projectId: createProjectSuccessResult.result.id,
+        ),
+        sessionDto: SessionDto.empty(),
+      );
+
+      expect(
+          createComponentResult.maybeWhen(
+            failure: (_) => true,
+            orElse: () => null,
+          ),
+          true);
+
+      createComponentResult = await api.createComponent(
+        dto: CreateComponentDto(
+          name: componentName,
+          description: componentDescription,
+          projectId: createProjectSuccessResult.result.id,
+        ),
+        sessionDto: SessionDto(
+          authToken: mockUserToken,
+        ),
+      );
+
+      final createComponentSuccessResult = createComponentResult.maybeWhen(
+        success: (val) => val,
+        orElse: () => null,
+      );
+
+      expect(createComponentSuccessResult, isNotNull);
+      expect(createComponentSuccessResult.result.name, componentName);
+      expect(createComponentSuccessResult.result.description,
+          componentDescription);
+
+      var canUpdateComponentResult = await api.canUpdateComponents(
+        sessionDto: SessionDto(
+          authToken: mockUserToken,
+        ),
+      );
+
+      final canUpdateComponentSuccessResult =
+          canUpdateComponentResult.maybeWhen(
+        success: (val) => val,
+        orElse: () => null,
+      );
+
+      expect(canUpdateComponentSuccessResult, isNotNull);
+
+      expect(canUpdateComponentSuccessResult.result.first.name,
+          createComponentSuccessResult.result.name);
+      expect(canUpdateComponentSuccessResult.result.first.description,
+          createComponentSuccessResult.result.description);
 
       final projectConfig = ProjectConfig(
         project: projectName,
@@ -167,16 +219,16 @@ void main() {
         cacheDir:
             ".hydroc${path.separator}${package["dependencies"]["@hydro-sdk/hydro-sdk"]}",
         profile: "release",
-        signingKey: createComponentResponse.publishingPrivateKey,
+        signingKey: createComponentSuccessResult.result.publishingPrivateKey,
         outDir: ".",
       );
 
       await projectBuilder.build(signManifest: true);
 
-      final createPackageResponse = await api.createPackage(
+      final createPackageResult = await api.createPackage(
           createPackageDto: CreatePackageDto(
-        publishingPrivateKeySha256:
-            sha256Data(createComponentResponse.publishingPrivateKey.codeUnits),
+        publishingPrivateKeySha256: sha256Data(
+            createComponentSuccessResult.result.publishingPrivateKey.codeUnits),
         otaPackageBase64:
             base64Encode(await File("$componentName.ota").readAsBytes()),
         componentName: componentName,
@@ -249,10 +301,15 @@ quod unam Ulixem.
         pubspecLock: "",
       ));
 
-      expect(createPackageResponse, isNotNull);
+      final createPackageSuccessResult = createPackageResult.maybeWhen(
+        success: (val) => val,
+        orElse: () => null,
+      );
 
-      var latestPackageUri = await api.getLatestPackageUri(
-          getPackageDto: GetPackageDto(
+      expect(createPackageSuccessResult, isNotNull);
+
+      final latestPackageResult = await api.getLatestPackage(
+          getLatestPackageDto: GetLatestPackageDto(
         sessionId: Uuid().v4(),
         projectName: projectName,
         componentName: componentName,
@@ -260,11 +317,19 @@ quod unam Ulixem.
         currentPackageId: "",
       ));
 
-      expect(latestPackageUri.statusCode, 201);
-      expect(latestPackageUri.body, isNotNull);
-      expect(latestPackageUri.body, isNotEmpty);
+      final latestPackageSuccessResult = latestPackageResult.maybeWhen(
+        success: (val) => val,
+        orElse: () => null,
+      );
 
-      final downloadResponse = await get(Uri.parse(latestPackageUri.body));
+      expect(latestPackageSuccessResult, isNotNull);
+
+      expect(latestPackageSuccessResult.statusCode, 201);
+      expect(latestPackageSuccessResult.result.url, isNotNull);
+      expect(latestPackageSuccessResult.result.url, isNotEmpty);
+
+      final downloadResponse =
+          await get(Uri.parse(latestPackageSuccessResult.result.url));
       expect(downloadResponse.statusCode, 200);
       expect(downloadResponse.body, isNotEmpty);
 
