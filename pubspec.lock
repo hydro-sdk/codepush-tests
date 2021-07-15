@@ -553,10 +553,12 @@ packages:
   waveform:
     dependency: "direct main"
     description:
-      name: waveform
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.0.1-nightly.43"
+      path: "."
+      ref: "0.0.1-nightly.45"
+      resolved-ref: "94fb3362b33822daa1c9e2dce21b146c109cc361"
+      url: "git://github.com/hydro-sdk/waveform.git"
+    source: git
+    version: "0.0.1"
   win32:
     dependency: transitive
     description:
