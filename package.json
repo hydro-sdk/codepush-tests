@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/hydro-sdk/codepush-tests#readme",
   "dependencies": {
-    "@hydro-sdk/hydro-sdk": "0.0.1-nightly.414",
+    "@hydro-sdk/hydro-sdk": "0.0.1-nightly.415",
     "@hydro-sdk/waveform": "0.0.1-nightly.43",
     "prettier": "^2.2.0",
     "prettier-plugin-import-sort": "0.0.6",
